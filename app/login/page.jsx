@@ -22,14 +22,39 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+
+  useEffect(() => {
+    if (err) {
+      const timer = setTimeout(() => setErr(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [err]);
+
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isLocked) {
+      setErr("Account locked due to 5 failed login attempts. Please try again after 5 minutes.");
+      return;
+    }
     setLoading(true);
     setErr("");
     try {
       await login(form);
+      setFailedAttempts(0);
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "Invalid username or password");
+      const nextCount = failedAttempts + 1;
+      setFailedAttempts(nextCount);
+      if (nextCount >= 5) {
+        setIsLocked(true);
+        setErr("Account temporarily locked due to 5 failed attempts. Please try again in 5 minutes.");
+        setTimeout(() => {
+          setIsLocked(false);
+          setFailedAttempts(0);
+        }, 5 * 60 * 1000);
+      }
     } finally {
       setLoading(false);
     }
@@ -94,8 +119,8 @@ export default function LoginPage() {
           style={{
             padding: 1,
             borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(0,200,150,0.24) 0%, rgba(59,130,246,0.12) 100%)",
-            boxShadow: "0 0 32px rgba(0,200,150,0.12), 0 0 72px rgba(59,130,246,0.06)",
+            background: "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(6,182,212,0.4) 100%)",
+            boxShadow: "0 0 40px rgba(124,58,237,0.2), 0 0 80px rgba(6,182,212,0.1)",
           }}
         >
           <div
@@ -116,11 +141,29 @@ export default function LoginPage() {
                   <AppLogo size={62} showText={false} />
                 </div>
               </div>
-              <h1 className="syne" style={{ fontSize: 30, fontWeight: 800, color: "var(--text)" }}>Studio Sangi</h1>
+              <h1 className="syne" style={{ fontSize: 30, fontWeight: 800, color: "var(--text)" }}>IUI Solutions</h1>
               <p style={{ color: "var(--text-2)", fontSize: 13, marginTop: 8, letterSpacing: "0.06em", textTransform: "uppercase" }}>Enterprise HR Mission Control</p>
             </div>
 
             <form onSubmit={handleSubmit}>
+              {err && (
+                <div
+                  style={{
+                    background: "rgba(239,68,68,0.18)",
+                    border: "1px solid #ef4444",
+                    borderRadius: 10,
+                    padding: "12px 16px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#f87171",
+                    marginBottom: 20,
+                    textAlign: "center",
+                    boxShadow: "0 0 20px rgba(239,68,68,0.25)"
+                  }}
+                >
+                  ⚠️ {err}
+                </div>
+              )}
               <div className="form-group">
                 <label className="label">Username or Email</label>
                 <div style={{ position: "relative" }}>
@@ -158,17 +201,6 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {err && (
-                <div
-                  style={{
-                    background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.28)", borderRadius: 10,
-                    padding: "10px 14px", fontSize: 13, color: "#fca5a5", marginBottom: 16,
-                  }}
-                >
-                  ✕ {err}
-                </div>
-              )}
-
               <button
                 className="btn-primary" type="submit" disabled={loading}
                 style={{ width: "100%", justifyContent: "center", padding: "14px 20px", fontSize: 15, marginTop: 4 }}
@@ -183,17 +215,17 @@ export default function LoginPage() {
                 marginTop: 16,
                 padding: "18px 20px",
                 borderRadius: 12,
-                background: "rgba(0,200,150,0.05)",
-                border: "1px solid rgba(0,200,150,0.18)",
-                boxShadow: "0 0 24px rgba(0,200,150,0.08)",
+                background: "rgba(124,58,237,0.04)",
+                border: "1px solid rgba(124,58,237,0.18)",
+                boxShadow: "0 0 24px rgba(124,58,237,0.08)",
                 animation: "slideUp 0.22s cubic-bezier(0.16,1,0.3,1)",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                   <span style={{ fontSize: 14, opacity: 0.5 }}>◈</span>
                   <span style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-                    textTransform: "uppercase", color: "rgba(0,200,150,0.72)",
-                    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+                    textTransform: "uppercase", color: "rgba(124,58,237,0.6)",
+                    fontFamily: "Rajdhani, Outfit, sans-serif",
                   }}>
                     SYSTEM ACCESS
                   </span>
@@ -225,9 +257,9 @@ export default function LoginPage() {
                   style={{
                     width: "100%",
                     justifyContent: "center",
-                    background: "rgba(0,200,150,0.12)",
-                    border: "1px solid rgba(0,200,150,0.25)",
-                    color: "rgba(0,168,126,0.9)",
+                    background: "rgba(124,58,237,0.12)",
+                    border: "1px solid rgba(124,58,237,0.25)",
+                    color: "rgba(124,58,237,0.8)",
                     padding: "10px 16px",
                     borderRadius: 8,
                     cursor: "pointer",
